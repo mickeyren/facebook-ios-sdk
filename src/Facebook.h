@@ -17,7 +17,7 @@
 #import "FBLoginDialog.h"
 #import "FBRequest.h"
 
-@protocol FBSessionDelegate;
+@protocol FacebookDelegate;
 
 /**
  * Main Facebook interface for interacting with the Facebook developer API.
@@ -28,7 +28,7 @@
 @interface Facebook : NSObject<FBLoginDialogDelegate, FBRequestDelegate>{
   NSString* _accessToken;
   NSDate* _expirationDate;
-  id<FBSessionDelegate> _sessionDelegate;
+  id<FacebookDelegate> _delegate;
   FBRequest* _request;
   FBDialog* _loginDialog;
   FBDialog* _fbDialog;
@@ -39,14 +39,13 @@
 
 @property(nonatomic, copy) NSDate* expirationDate;
 
-@property(nonatomic, assign) id<FBSessionDelegate> sessionDelegate;
+@property(nonatomic, assign) id<FacebookDelegate> delegate;
 
 
 - (void) authorize:(NSString*) application_id
-       permissions:(NSArray*) permissions
-          delegate:(id<FBSessionDelegate>) delegate;
+       permissions:(NSArray*) permissions;
 
-- (void) logout:(id<FBSessionDelegate>) delegate;
+- (void) logout;
 
 - (void) requestWithParams:(NSMutableDictionary *) params 
                andDelegate:(id <FBRequestDelegate>) delegate;
@@ -84,23 +83,28 @@
 /*
  *Your application should implement this delegate 
  */
-@protocol FBSessionDelegate <NSObject>
+@protocol FacebookDelegate <NSObject>
 
 @optional
 
 /**
  * Called when the dialog successful log in the user
  */
-- (void)fbDidLogin;
+- (void)facebookDidLogin:(Facebook *)facebook;
 
 /**
  * Called when the user dismiss the dialog without login
  */
-- (void)fbDidNotLogin;
+- (void)facebookDidNotLogin:(Facebook *)facebook;
 
 /**
  * Called when the user is logged out
  */
-- (void)fbDidLogout;
+- (void)facebookDidLogout:(Facebook *)facebook;
+
+/**
+ * Called when the user is logged out
+ */
+- (void)facebook:(Facebook *)facebook didError:(NSError *)error;
 
 @end

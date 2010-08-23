@@ -33,7 +33,7 @@ static NSString* kSDKVersion = @"ios";
 
 @synthesize accessToken = _accessToken, 
          expirationDate = _expirationDate, 
-        sessionDelegate = _sessionDelegate;
+        delegate = _delegate;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // private
@@ -104,13 +104,9 @@ static NSString* kSDKVersion = @"ios";
  *            http://developers.facebook.com/docs/authentication/permissions
  *            This parameter should not be null -- if you do not require any
  *            permissions, then pass in an empty String array.
- * @param delegate
- *            Callback interface for notifying the calling application when
- *            the application has logged in
  */
 - (void) authorize:(NSString*)application_id
-       permissions:(NSArray*)permissions
-          delegate:(id<FBSessionDelegate>)delegate {
+       permissions:(NSArray*)permissions {
   
   NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
     application_id, @"client_id",
@@ -125,8 +121,6 @@ static NSString* kSDKVersion = @"ios";
     [params setValue:scope forKey:@"scope"];
   }
 
-  _sessionDelegate = delegate;
-  
   [_loginDialog release];
   _loginDialog = [[FBLoginDialog alloc] initWithURL:kOAuthURL 
                                          loginParams:params 
@@ -141,14 +135,8 @@ static NSString* kSDKVersion = @"ios";
  * memory, clearing the browser cookie, and calling auth.expireSession
  * through the API.  
  * 
- * @param delegate
- *            Callback interface for notifying the calling application when
- *            the application has logged out
  */
-- (void)logout:(id<FBSessionDelegate>)delegate {
- 
-  _sessionDelegate = delegate;
-  
+- (void)logout {
   NSMutableDictionary * params = [[NSMutableDictionary alloc] init]; 
   [self requestWithMethodName:@"auth.expireSession" 
                     andParams:params andHttpMethod:@"GET" 
@@ -168,8 +156,8 @@ static NSString* kSDKVersion = @"ios";
     [cookies deleteCookie:cookie];
   }
   
-  if ([self.sessionDelegate respondsToSelector:@selector(fbDidLogout)]) {
-    [_sessionDelegate fbDidLogout];
+  if ([self.delegate respondsToSelector:@selector(fbDidLogout)]) {
+    [_delegate facebookDidLogout:self];
   }
 }
 
@@ -402,8 +390,8 @@ static NSString* kSDKVersion = @"ios";
 - (void)fbDialogLogin:(NSString *)token expirationDate:(NSDate *)expirationDate {
   self.accessToken = token;
   self.expirationDate = expirationDate;
-  if ([self.sessionDelegate respondsToSelector:@selector(fbDidLogin)]) {
-    [_sessionDelegate fbDidLogin];
+  if ([self.delegate respondsToSelector:@selector(facebookDidLogin:)]) {
+    [_delegate facebookDidLogin:self];
   }
   
 }
@@ -412,8 +400,8 @@ static NSString* kSDKVersion = @"ios";
  * Did not login call the not login delegate
  */
 - (void) fbDialogNotLogin {
-  if ([self.sessionDelegate respondsToSelector:@selector(fbDidNotLogin)]) {
-    [_sessionDelegate fbDidNotLogin];
+  if ([self.delegate respondsToSelector:@selector(facebookDidNotLogin:)]) {
+    [_delegate facebookDidNotLogin:self];
   }
 }
 
@@ -425,7 +413,9 @@ static NSString* kSDKVersion = @"ios";
  * Handle the auth.ExpireSession api call failure
  */
 - (void)request:(FBRequest*)request didFailWithError:(NSError*)error{
-  NSLog(@"Failed to expiration the session"); 
+  if ([self.delegate respondsToSelector:@selector(facebook:didError:)]) {
+    [_delegate facebook:self didError:error];
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

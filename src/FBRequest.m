@@ -15,7 +15,11 @@
  */
 
 #import "FBRequest.h"
+#if FB_USE_YAJL
+#import "YAJL.h"
+#else
 #import "JSON.h"
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // global 
@@ -171,7 +175,6 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
   NSString* responseString = [[[NSString alloc] initWithData:data 
                                                     encoding:NSUTF8StringEncoding] 
                               autorelease];
-  SBJSON *jsonParser = [[SBJSON new] autorelease];
   if ([responseString isEqualToString:@"true"]) {
     return [NSDictionary dictionaryWithObject:@"true" forKey:@"result"];
   } else if ([responseString isEqualToString:@"false"]) {
@@ -181,10 +184,15 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
                               forKey:@"error_msg"]];
     return nil;
   }
-              
              
+#if FB_USE_YAJL
+  id result = [responseString yajl_JSON:error];
+  if (!result) return nil;
+#else
+  SBJSON *jsonParser = [[SBJSON new] autorelease];   
   id result = [jsonParser objectWithString:responseString];
-  
+#endif
+    
   if (![result isKindOfClass:[NSArray class]]) {
     if ([result objectForKey:@"error"] != nil) {
       *error = [self formError:kGeneralErrorCode
