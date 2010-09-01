@@ -16,7 +16,7 @@
 
 #import "FBRequest.h"
 #if FB_USE_YAJL
-#import "YAJL.h"
+#import <YAJLIOS/YAJLIOS.h>
 #else
 #import "JSON.h"
 #endif

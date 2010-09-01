@@ -75,9 +75,8 @@
  * Override FBDialog : to call with the login dialog get canceled 
  */
 - (void)dialogDidCancel:(NSURL *)url {
-  [self dismissWithSuccess:NO animated:YES];
-  if ([_loginDelegate respondsToSelector:@selector(fbDialogNotLogin)]) {
-    [_loginDelegate fbDialogNotLogin];
+  if ([_loginDelegate respondsToSelector:@selector(fbDialogNotLogin:)]) {
+    [_loginDelegate fbDialogNotLogin:nil];
   }
 }
 
@@ -85,8 +84,8 @@
   if (!(([error.domain isEqualToString:@"NSURLErrorDomain"] && error.code == -999) ||
         ([error.domain isEqualToString:@"WebKitErrorDomain"] && error.code == 102))) {
     [super webView:webView didFailLoadWithError:error];
-    if ([_loginDelegate respondsToSelector:@selector(fbDialogNotLogin)]) {
-      [_loginDelegate fbDialogNotLogin];
+    if ([_loginDelegate respondsToSelector:@selector(fbDialogNotLogin:)]) {
+      [_loginDelegate fbDialogNotLogin:error];
     }
   }
 }

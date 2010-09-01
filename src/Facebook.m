@@ -63,7 +63,7 @@ static NSString* kSDKVersion = @"ios";
     [params setValue:self.accessToken forKey:@"access_token"];
   }
   
-  [_request release];
+  [self cancel];
   _request = [[FBRequest getRequestWithParams:params
                                    httpMethod:httpMethod
                                      delegate:delegate
@@ -73,6 +73,12 @@ static NSString* kSDKVersion = @"ios";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //public
+
+- (void) cancel {
+  _request.delegate = nil;
+  [_request release];
+  _request = nil;
+}
 
 /**
  * Starts a dialog which prompts the user to log in to Facebook and grant
@@ -136,7 +142,7 @@ static NSString* kSDKVersion = @"ios";
  * through the API.  
  * 
  */
-- (void)logout {
+- (void) logout {
   NSMutableDictionary * params = [[NSMutableDictionary alloc] init]; 
   [self requestWithMethodName:@"auth.expireSession" 
                     andParams:params andHttpMethod:@"GET" 
@@ -156,7 +162,7 @@ static NSString* kSDKVersion = @"ios";
     [cookies deleteCookie:cookie];
   }
   
-  if ([self.delegate respondsToSelector:@selector(fbDidLogout)]) {
+  if ([self.delegate respondsToSelector:@selector(facebookDidLogout:)]) {
     [_delegate facebookDidLogout:self];
   }
 }
@@ -393,15 +399,18 @@ static NSString* kSDKVersion = @"ios";
   if ([self.delegate respondsToSelector:@selector(facebookDidLogin:)]) {
     [_delegate facebookDidLogin:self];
   }
-  
 }
 
 /**
  * Did not login call the not login delegate
  */
-- (void) fbDialogNotLogin {
-  if ([self.delegate respondsToSelector:@selector(facebookDidNotLogin:)]) {
-    [_delegate facebookDidNotLogin:self];
+- (void) fbDialogNotLogin:(NSError *)error {
+  if (error) {
+    if ([self.delegate respondsToSelector:@selector(facebook:didError:)])
+      [_delegate facebook:self didError:error];
+  } else {
+    if ([self.delegate respondsToSelector:@selector(facebookDidNotLogin:)])
+      [_delegate facebookDidNotLogin:self];
   }
 }
 
@@ -425,8 +434,11 @@ static NSString* kSDKVersion = @"ios";
 - (void)dealloc {
   [_accessToken release];
   [_expirationDate release];
+  _request.delegate = nil;
   [_request release];
+  _loginDialog.delegate = nil;
   [_loginDialog release];
+  _fbDialog.delegate = nil;
   [_fbDialog release];
   [super dealloc];
 }

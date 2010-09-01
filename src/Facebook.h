@@ -47,6 +47,8 @@
 
 - (void) logout;
 
+- (void) cancel;
+
 - (void) requestWithParams:(NSMutableDictionary *) params 
                andDelegate:(id <FBRequestDelegate>) delegate;
 
