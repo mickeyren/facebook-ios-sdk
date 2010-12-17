@@ -583,6 +583,10 @@ BOOL FBIsDeviceIPad() {
   _spinner.center = _webView.center;
 
   UIWindow* window = [UIApplication sharedApplication].keyWindow;
+  // TODO: Ugly hack to get correct window when a dialog is being displayed
+  if ([[UIApplication sharedApplication].delegate respondsToSelector:@selector(window)]) {
+    window = [(id)[UIApplication sharedApplication].delegate window];
+  }
   if (!window) {
     window = [[UIApplication sharedApplication].windows objectAtIndex:0];
   }
